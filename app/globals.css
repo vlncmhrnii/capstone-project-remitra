@@ -8,8 +8,18 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-manrope);
+
+  /* Orange Remitra Theme */
+  --color-orange-primary: 24 94 60;
+  --color-orange-primary-50: 24 100% 98%;
+  --color-orange-primary-100: 25 100% 96%;
+  --color-orange-primary-500: 24 94% 60%;
+  --color-orange-primary-600: 24 94% 55%;
+
+  /* Glassmorphism */
+  --glass-bg: 0 0% 100% / 0.1;
+  --glass-border: 0 0% 100% / 0.5;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +32,40 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .orange-gradient {
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 122, 0, 0.2),
+      rgba(255, 149, 0, 0.1),
+      rgba(217, 119, 6, 0.2)
+    );
+  }
+
+  .orange-glow {
+    box-shadow: 0 0 30px hsl(var(--color-orange-primary) / 0.3);
+  }
+
+  .hero-card {
+    border-radius: 24px;
+    padding: 2rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  @media (min-width: 768px) {
+    .hero-card {
+      padding: 3rem;
+    }
+  }
 }

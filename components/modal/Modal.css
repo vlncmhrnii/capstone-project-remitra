@@ -1,0 +1,40 @@
+/* Custom scrollbar styling for modal content area only */
+
+/* Chrome, Edge, Safari */
+.modal-content-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-content-area::-webkit-scrollbar-thumb {
+  background-color: rgba(249, 115, 22, 0.45);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.modal-content-area::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(249, 115, 22, 0.65);
+  background-clip: content-box;
+}
+
+/* Dark mode scrollbar */
+.dark .modal-content-area::-webkit-scrollbar-thumb {
+  background-color: rgba(249, 115, 22, 0.5);
+  background-clip: content-box;
+}
+
+.dark .modal-content-area::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(249, 115, 22, 0.7);
+  background-clip: content-box;
+}
+
+/* Firefox */
+.modal-content-area {
+  scrollbar-color: rgba(249, 115, 22, 0.45) transparent;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}

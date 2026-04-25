@@ -1,0 +1,39 @@
+/* Spinner for Button */
+.button-spinner {
+  display: inline-block;
+  border-radius: 9999px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: currentColor;
+  border-right-color: transparent;
+  animation: button-spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+.button-spinner--primary {
+  color: #fff; /* putih */
+}
+.button-spinner--secondary {
+  color: #f59e42; /* orange-400/amber-400 */
+}
+.button-spinner--danger {
+  color: #ef4444; /* red-500 */
+}
+.button-spinner--tertiary {
+  color: #a3a3a3; /* neutral-400 */
+}
+.button-spinner--lg {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 3px;
+}
+.button-spinner--md {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.button-spinner--sm {
+  width: 1rem;
+  height: 1rem;
+}
+@keyframes button-spin {
+  100% { transform: rotate(360deg); }
+}
