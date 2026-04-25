@@ -161,8 +161,7 @@ export default function ResetPasswordClient() {
             description={notice.description}
             type={notice.tone}
             mode="absolute"
-            duration={3500}
-            showCloseButton={false}
+            duration={5000}
             onClose={() => setNotice(null)}
           />
         ) : null}

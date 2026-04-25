@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import Lottie from "lottie-react";
 import { useForm, useWatch } from "react-hook-form";
@@ -47,6 +48,7 @@ const forgotPasswordSchema = z.object({
 const revealTransition = { duration: 0.45, ease: [0.22, 1, 0.36, 1] };
 
 export default function ForgotPasswordClient() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState(null);
   const [submittedEmail, setSubmittedEmail] = useState("");
@@ -141,12 +143,7 @@ export default function ForgotPasswordClient() {
       startEmailCooldown("forgot-password", values.email, nextCooldownMs);
       setSubmittedEmail(values.email);
       setCooldownTick((current) => current + 1);
-      setNotice(
-        buildNotice(
-          "Jika email terdaftar, kami telah mengirim tautan untuk mengatur ulang kata sandi.",
-          "success",
-        ),
-      );
+      router.replace("/reset-password-terkirim");
     } finally {
       setLoading(false);
     }
@@ -173,8 +170,7 @@ export default function ForgotPasswordClient() {
             description={notice.description}
             type={notice.tone}
             mode="absolute"
-            duration={3500}
-            showCloseButton={false}
+            duration={5000}
             onClose={() => setNotice(null)}
           />
         ) : null}

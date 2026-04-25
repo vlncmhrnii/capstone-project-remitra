@@ -67,7 +67,7 @@ function Alert({
   className = "",
   closeLabel = "Tutup alert",
   description,
-  duration = 0,
+  duration = 5000,
   mode = "inline",
   onClose,
   offsetTop = 16,

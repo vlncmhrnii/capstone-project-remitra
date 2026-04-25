@@ -90,7 +90,6 @@ export default function PelangganPage() {
             type={notice.tone}
             mode="absolute"
             duration={5000}
-            showCloseButton={false}
             onClose={() => setNotice(null)}
           />
         ) : null}

@@ -211,8 +211,7 @@ export default function RegisterClient() {
             description={notice.description}
             type={notice.tone}
             mode="absolute"
-            duration={3000}
-            showCloseButton={false}
+            duration={5000}
             onClose={() => setNotice(null)}
           />
         ) : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { ComponentType } from "react";
@@ -8,7 +8,6 @@ import {
   HomeModernIcon,
   UserGroupIcon,
   DocumentTextIcon,
-  ChartBarIcon,
 } from "@heroicons/react/24/solid";
 import Sidebar from "@/components/sidebar/Sidebar";
 import Header from "@/components/header/Header";
@@ -55,6 +54,16 @@ const SidebarComponent =
 const HeaderComponent =
   Header as unknown as ComponentType<HeaderComponentProps>;
 
+const entranceTransition = {
+  duration: 0.35,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+
+const headerTransition = {
+  duration: 0.3,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+
 const sidebarItems: SidebarItem[] = [
   { key: "dashboard", label: "Dashboard", icon: HomeModernIcon, path: "/" },
   {
@@ -75,6 +84,9 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [authStatus, setAuthStatus] = useState<
+    "checking" | "authenticated" | "unauthenticated"
+  >("checking");
   const [shouldPlayEntrance] = useState(() => {
     if (typeof window === "undefined") return false;
     const entranceKey = "dashboard-entrance-played";
@@ -87,6 +99,46 @@ export default function DashboardLayout({
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const profile = useAuthProfileStore((state) => state.profile);
+
+  useEffect(() => {
+    let isMounted = true;
+    const supabase = createClient();
+
+    async function verifyAuth() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (!isMounted) return;
+
+      if (error || !data.user) {
+        setAuthStatus("unauthenticated");
+        router.replace("/login");
+        return;
+      }
+
+      setAuthStatus("authenticated");
+    }
+
+    void verifyAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+
+      if (event === "SIGNED_OUT" || !session?.user) {
+        setAuthStatus("unauthenticated");
+        router.replace("/login");
+        return;
+      }
+
+      setAuthStatus("authenticated");
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [router]);
 
   const activeSidebarKey = (() => {
     if (pathname?.startsWith("/pelanggan")) return "pelanggan";
@@ -108,6 +160,36 @@ export default function DashboardLayout({
     }
   };
 
+  if (authStatus === "checking") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6 dark:bg-neutral-900">
+        <div className="w-full max-w-md rounded-3xl border border-orange-200 bg-white p-6 text-center shadow-[0_24px_80px_-48px_rgba(0,0,0,0.35)] dark:border-neutral-800 dark:bg-neutral-950">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+            Memeriksa sesi...
+          </h1>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            Tunggu sebentar, kami sedang memastikan akses dashboard kamu masih aktif.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (authStatus === "unauthenticated") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6 dark:bg-neutral-900">
+        <div className="w-full max-w-md rounded-3xl border border-orange-200 bg-white p-6 text-center shadow-[0_24px_80px_-48px_rgba(0,0,0,0.35)] dark:border-neutral-800 dark:bg-neutral-950">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+            Sesi login sudah berakhir
+          </h1>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            Demi keamanan, kamu perlu login lagi untuk melanjutkan.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-neutral-900 lg:flex-row">
       <motion.div
@@ -115,7 +197,7 @@ export default function DashboardLayout({
         animate={{ opacity: 1, x: 0 }}
         transition={
           shouldPlayEntrance
-            ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
+            ? entranceTransition
             : { duration: 0 }
         }
         className="relative z-40 shrink-0"
@@ -144,7 +226,7 @@ export default function DashboardLayout({
           animate={{ opacity: 1, y: 0 }}
           transition={
             shouldPlayEntrance
-              ? { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
+              ? headerTransition
               : { duration: 0 }
           }
           className="relative z-30"
