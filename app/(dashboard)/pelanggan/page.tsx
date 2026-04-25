@@ -13,6 +13,14 @@ import { kirimTagihanWA, getLastReminderLog } from "@/lib/services/pelanggan.ser
 import PelangganListView from "./_components/PelangganListView";
 import PelangganPageSkeleton from "./_components/PelangganPageSkeleton";
 
+function buildNotice(message: string, tone: "success" | "delete") {
+  return {
+    title: tone === "success" ? "Berhasil" : "Gagal",
+    description: message,
+    tone,
+  };
+}
+
 export default function PelangganPage() {
   const {
     bayarForm,
@@ -81,7 +89,7 @@ export default function PelangganPage() {
             description={notice.description}
             type={notice.tone}
             mode="absolute"
-            duration={3000}
+            duration={5000}
             showCloseButton={false}
             onClose={() => setNotice(null)}
           />
@@ -110,21 +118,41 @@ export default function PelangganPage() {
           onOpenEdit={openEditCustomer}
           onOpenDelete={() => setIsDeleteModalOpen(true)}
           onTagihWA={async () => {
-            // Cari transaksi kasbon terbaru
             const kasbon = selectedTransactions.find((t) => t.type === "kasbon");
             if (!kasbon) return;
-            await kirimTagihanWA(
-              kasbon.id,
-              selectedCustomer.no_hp,
-              selectedCustomer.nama,
-              selectedSummary.sisaUtang,
-              selectedSummary.janjiBayar ?? "", // fallback string kosong
-              (selectedCustomer.kategori ?? "green").toLowerCase(),
-              namaToko
-            );
-            // Refresh info reminder
-            const log = await getLastReminderLog(kasbon.id);
-            setTerakhirDitagih(log);
+
+            if (!selectedCustomer.no_hp) {
+              setNotice(
+                buildNotice(
+                  `Nomor WhatsApp untuk ${selectedCustomer.nama} belum tersedia.`,
+                  "delete",
+                ),
+              );
+              return;
+            }
+
+            try {
+              await kirimTagihanWA(
+                kasbon.id,
+                selectedCustomer.no_hp,
+                selectedCustomer.nama,
+                selectedSummary.sisaUtang,
+                selectedSummary.janjiBayar ?? "",
+                (selectedCustomer.kategori ?? "green").toLowerCase(),
+                namaToko,
+              );
+
+              const log = await getLastReminderLog(kasbon.id);
+              setTerakhirDitagih(log);
+            } catch (error) {
+              console.error(error);
+              setNotice(
+                buildNotice(
+                  `Gagal menyiapkan reminder WhatsApp untuk ${selectedCustomer.nama}.`,
+                  "delete",
+                ),
+              );
+            }
           }}
           terakhirDitagih={terakhirDitagih}
         />

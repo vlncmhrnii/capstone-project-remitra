@@ -322,7 +322,7 @@ export default function Dashboard() {
             description={notice.description}
             type={notice.tone}
             mode="absolute"
-            duration={3000}
+            duration={5000}
             showCloseButton={false}
             onClose={() => setNotice(null)}
           />
@@ -514,12 +514,6 @@ export default function Dashboard() {
                           item.tanggalJanji,
                           item.kategori.toLowerCase(),
                           namaToko,
-                        );
-                        setNotice(
-                          buildNotice(
-                            `Template WhatsApp untuk ${item.name} siap dikirim.`,
-                            "success",
-                          ),
                         );
                       } catch (error) {
                         console.error(error);
