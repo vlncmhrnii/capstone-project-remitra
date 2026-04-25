@@ -290,7 +290,7 @@ export default function RegisterClient() {
 
               <Input
                 label="Nama Lengkap"
-                placeholder="Contoh : UMKM Sejahtera"
+                placeholder="Contoh : Dewi Sartika"
                 state={errors.fullName ? "error" : "default"}
                 helperText={errors.fullName?.message ?? ""}
                 {...register("fullName")}

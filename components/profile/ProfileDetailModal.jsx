@@ -39,7 +39,7 @@ export default function ProfileDetailModal({ isOpen, onClose, profile }) {
       isOpen={isOpen}
       onClose={onClose}
       title="Detail Profil"
-      description="Informasi akun ini diambil dari data autentikasi dan metadata saat pendaftaran."
+      description="Informasi detail tentang profil akun Anda."
       size="2xl"
     >
       <div className="space-y-6">
