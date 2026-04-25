@@ -168,21 +168,21 @@ export default function LaporanTable({ data, view }: Props) {
             key={group.customerId}
             className="overflow-hidden rounded-2xl border border-orange-100 bg-white/95 shadow-sm dark:border-orange-900 dark:bg-neutral-900/90"
           >
-            <div className="flex items-center justify-between border-b border-orange-100 bg-orange-50/80 px-5 py-3.5 dark:border-orange-900 dark:bg-orange-950/30">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 border-b border-orange-100 bg-orange-50/80 px-4 py-3.5 dark:border-orange-900 dark:bg-orange-950/30 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
                   {avatarLabel}
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-neutral-900 dark:text-neutral-100">
                     {displayName}
                   </p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">
                     {displayPhone}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${summaryBadge.className}`}>
                   {summaryBadge.label}
                 </span>
@@ -196,77 +196,79 @@ export default function LaporanTable({ data, view }: Props) {
               </div>
             </div>
 
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-orange-50 text-xs text-neutral-400 dark:border-orange-900">
-                  <th className="px-5 py-2 text-left font-medium">Tanggal</th>
-                  <th className="px-5 py-2 text-left font-medium">Jenis</th>
-                  <th className="px-5 py-2 text-left font-medium">Jumlah</th>
-                  {!useLunasLayout ? (
-                    <th className="px-5 py-2 text-left font-medium">Jatuh Tempo</th>
-                  ) : null}
-                  {!useLunasLayout ? (
-                    <th className="px-5 py-2 text-left font-medium">Status</th>
-                  ) : null}
-                  <th className="px-5 py-2 text-left font-medium">Keterangan</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-orange-50 dark:divide-orange-900/50">
-                {group.transaksi.map((transaction, indexRow) => (
-                  <tr
-                    key={`${transaction.id}-${indexRow}`}
-                    className="transition hover:bg-orange-50/40 dark:hover:bg-orange-950/10"
-                  >
-                    <td className="px-5 py-3 text-neutral-600 dark:text-neutral-300">
-                      {transaction.tanggal ? fmtDate(transaction.tanggal) : "-"}
-                    </td>
-
-                    <td className="px-5 py-3 text-neutral-600 dark:text-neutral-300">
-                      {getTransactionLabel(transaction)}
-                    </td>
-
-                    <td className="px-5 py-3 font-bold text-orange-700 dark:text-orange-300">
-                      {fmtRupiah(transaction.nominal)}
-                    </td>
-
+            <div className="overflow-x-auto">
+              <table className="min-w-640px w-full text-sm">
+                <thead>
+                  <tr className="border-b border-orange-50 text-xs text-neutral-400 dark:border-orange-900">
+                    <th className="px-4 py-2 text-left font-medium sm:px-5">Tanggal</th>
+                    <th className="px-4 py-2 text-left font-medium sm:px-5">Jenis</th>
+                    <th className="px-4 py-2 text-left font-medium sm:px-5">Jumlah</th>
                     {!useLunasLayout ? (
-                      <td className="px-5 py-3">
-                        {transaction.tanggalJanji ? (
-                          <span
-                            className={
-                              isLewat(transaction.tanggalJanji) &&
-                              transaction.status !== "lunas"
-                                ? "font-semibold text-red-500"
-                                : "text-neutral-600 dark:text-neutral-300"
-                            }
-                          >
-                            {fmtDate(transaction.tanggalJanji)}
-                            {isLewat(transaction.tanggalJanji) &&
-                              transaction.status !== "lunas" &&
-                              " (lewat)"}
-                          </span>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
+                      <th className="px-4 py-2 text-left font-medium sm:px-5">Jatuh Tempo</th>
                     ) : null}
-
                     {!useLunasLayout ? (
-                      <td className="px-5 py-3">
-                        <StatusBadge
-                          status={transaction.status}
-                          target={transaction.target}
-                        />
-                      </td>
+                      <th className="px-4 py-2 text-left font-medium sm:px-5">Status</th>
                     ) : null}
-
-                    <td className="px-5 py-3 text-neutral-500 dark:text-neutral-400">
-                      {transaction.keterangan ?? "-"}
-                    </td>
+                    <th className="px-4 py-2 text-left font-medium sm:px-5">Keterangan</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-orange-50 dark:divide-orange-900/50">
+                  {group.transaksi.map((transaction, indexRow) => (
+                    <tr
+                      key={`${transaction.id}-${indexRow}`}
+                      className="transition hover:bg-orange-50/40 dark:hover:bg-orange-950/10"
+                    >
+                      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300 sm:px-5">
+                        {transaction.tanggal ? fmtDate(transaction.tanggal) : "-"}
+                      </td>
+
+                      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300 sm:px-5">
+                        {getTransactionLabel(transaction)}
+                      </td>
+
+                      <td className="px-4 py-3 font-bold text-orange-700 dark:text-orange-300 sm:px-5">
+                        {fmtRupiah(transaction.nominal)}
+                      </td>
+
+                      {!useLunasLayout ? (
+                        <td className="px-4 py-3 sm:px-5">
+                          {transaction.tanggalJanji ? (
+                            <span
+                              className={
+                                isLewat(transaction.tanggalJanji) &&
+                                transaction.status !== "lunas"
+                                  ? "font-semibold text-red-500"
+                                  : "text-neutral-600 dark:text-neutral-300"
+                              }
+                            >
+                              {fmtDate(transaction.tanggalJanji)}
+                              {isLewat(transaction.tanggalJanji) &&
+                                transaction.status !== "lunas" &&
+                                " (lewat)"}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      ) : null}
+
+                      {!useLunasLayout ? (
+                        <td className="px-4 py-3 sm:px-5">
+                          <StatusBadge
+                            status={transaction.status}
+                            target={transaction.target}
+                          />
+                        </td>
+                      ) : null}
+
+                      <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400 sm:px-5">
+                        {transaction.keterangan ?? "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       })}

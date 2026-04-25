@@ -87,6 +87,7 @@ export default function DashboardLayout({
   const [authStatus, setAuthStatus] = useState<
     "checking" | "authenticated" | "unauthenticated"
   >("checking");
+  const [showCheckingFallback, setShowCheckingFallback] = useState(false);
   const [shouldPlayEntrance] = useState(() => {
     if (typeof window === "undefined") return false;
     const entranceKey = "dashboard-entrance-played";
@@ -110,11 +111,13 @@ export default function DashboardLayout({
       if (!isMounted) return;
 
       if (error || !data.user) {
+        setShowCheckingFallback(false);
         setAuthStatus("unauthenticated");
         router.replace("/login");
         return;
       }
 
+      setShowCheckingFallback(false);
       setAuthStatus("authenticated");
     }
 
@@ -126,11 +129,13 @@ export default function DashboardLayout({
       if (!isMounted) return;
 
       if (event === "SIGNED_OUT" || !session?.user) {
+        setShowCheckingFallback(false);
         setAuthStatus("unauthenticated");
         router.replace("/login");
         return;
       }
 
+      setShowCheckingFallback(false);
       setAuthStatus("authenticated");
     });
 
@@ -139,6 +144,18 @@ export default function DashboardLayout({
       subscription.unsubscribe();
     };
   }, [router]);
+
+  useEffect(() => {
+    if (authStatus !== "checking") {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setShowCheckingFallback(true);
+    }, 400);
+
+    return () => window.clearTimeout(timerId);
+  }, [authStatus]);
 
   const activeSidebarKey = (() => {
     if (pathname?.startsWith("/pelanggan")) return "pelanggan";
@@ -161,6 +178,10 @@ export default function DashboardLayout({
   };
 
   if (authStatus === "checking") {
+    if (!showCheckingFallback) {
+      return null;
+    }
+
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6 dark:bg-neutral-900">
         <div className="w-full max-w-md rounded-3xl border border-orange-200 bg-white p-6 text-center shadow-[0_24px_80px_-48px_rgba(0,0,0,0.35)] dark:border-neutral-800 dark:bg-neutral-950">
@@ -176,18 +197,7 @@ export default function DashboardLayout({
   }
 
   if (authStatus === "unauthenticated") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6 dark:bg-neutral-900">
-        <div className="w-full max-w-md rounded-3xl border border-orange-200 bg-white p-6 text-center shadow-[0_24px_80px_-48px_rgba(0,0,0,0.35)] dark:border-neutral-800 dark:bg-neutral-950">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            Sesi login sudah berakhir
-          </h1>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-            Demi keamanan, kamu perlu login lagi untuk melanjutkan.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

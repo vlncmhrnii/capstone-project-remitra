@@ -68,7 +68,7 @@ export function ModalDateField({
 					disabled={disabled}
 					min={min}
 					max={max}
-					className="scheme-light w-full rounded-full border-2 border-neutral-300 bg-white px-4 py-3 pr-12 text-[14px] leading-5 font-normal text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 dark:scheme-dark dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-orange-400 dark:focus:ring-orange-500/15 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none"
+					className="scheme-light block min-w-0 w-full appearance-none rounded-full border-2 border-neutral-300 bg-white px-4 py-3 pr-12 text-[14px] leading-5 font-normal text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 dark:scheme-dark dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-orange-400 dark:focus:ring-orange-500/15 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none"
 				/>
 				<button
 					type="button"
