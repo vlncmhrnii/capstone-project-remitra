@@ -106,21 +106,41 @@ async function syncKategoriPelanggan(pelangganId: string) {
   }
 
   const todayDate = new Date(new Date().toISOString().split("T")[0]);
-  const skorKeterlambatan = (kasbonAktif ?? []).reduce((total, kasbon) => {
+
+  // hitung jumlah kasbon berdasarkan rentang keterlambatan
+  let countOver30 = 0;
+  let count8to30 = 0;
+  let count1to7 = 0;
+  let skorKeterlambatan = 0;
+
+  (kasbonAktif ?? []).forEach((kasbon) => {
     const dueDate = kasbon.jatuh_tempo ?? kasbon.tanggal_janji;
-    if (!dueDate) return total;
+    if (!dueDate) return;
     const overdue = Math.floor(
       (todayDate.getTime() - new Date(dueDate).getTime()) / 86400000,
     );
-    return total + Math.min(Math.max(overdue, 0), 30);
-  }, 0);
+    if (overdue > 30) countOver30++;
+    else if (overdue >= 8) count8to30++;
+    else if (overdue >= 1) count1to7++;
+
+    skorKeterlambatan += Math.min(Math.max(overdue, 0), 30);
+  });
+
+  // Aturan per permintaan:
+  // - Jika ada utang >30 hari (satu atau lebih) -> black
+  // - Else jika ada utang 8–30 hari -> red
+  // - Else jika ada utang 1–7 hari -> yellow
+  // - Else -> green
+  let kategori: string;
+  if (countOver30 >= 1) kategori = "black";
+  else if (count8to30 >= 1) kategori = "red";
+  else if (count1to7 >= 1) kategori = "yellow";
+  else kategori = "green";
 
   await supabase
     .from("pelanggan")
-    .update({ skor_keterlambatan: skorKeterlambatan })
+    .update({ skor_keterlambatan: skorKeterlambatan, kategori })
     .eq("id", pelangganId);
-
-  await updateKategoriGabungan(pelangganId, skorKeterlambatan);
 }
 
 export async function recalculateAllPelangganKategori(): Promise<void> {
@@ -292,9 +312,14 @@ export async function createPelanggan(form: {
   no_hp: string;
   alamat: string;
 }): Promise<Customer | null> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: any;
+  try {
+    const resp = await supabase.auth.getUser();
+    user = resp?.data?.user;
+  } catch (err) {
+    console.error("Supabase auth.getUser failed:", err);
+    return null;
+  }
   if (!user) return null;
 
   const { data, error } = await supabase
@@ -345,12 +370,28 @@ export async function updatePelanggan(
 }
 
 export async function deletePelanggan(id: string): Promise<boolean> {
-  const { error } = await supabase.from("pelanggan").delete().eq("id", id);
-  if (error) {
-    console.error(error);
+  try {
+    const { data, error } = await supabase.from("pelanggan").delete().eq("id", id);
+    if (error) {
+      // supabase error can be an object with message/code/details
+      try {
+        console.error("deletePelanggan error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      } catch (e) {
+        console.error("deletePelanggan error (non-serializable):", error);
+      }
+      return false;
+    }
+
+    if (!data) {
+      console.error("deletePelanggan: no data returned from delete operation for id", id);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("deletePelanggan unexpected error:", err);
     return false;
   }
-  return true;
 }
 
 export async function fetchTransaksi(
@@ -541,7 +582,7 @@ export async function fetchDashboardStats() {
     supabase
       .from("kasbon")
       .select(
-        "id, jumlah, jatuh_tempo, status, pelanggan(nama, no_hp, kategori)",
+        "id, jumlah, jatuh_tempo, status, pelanggan(id, nama, no_hp, kategori)",
       )
       .eq("toko_id", user.id)
       .neq("status", "lunas"),
@@ -591,10 +632,35 @@ export async function fetchDashboardStats() {
     if (key in kategoriCount) kategoriCount[key]++;
   });
 
-  const reminders = (kasbonAktif ?? [])
+  // Agregasi per pelanggan: total jumlah piutang & jumlah kasbon aktif,
+  // serta pilih kasbon yang paling terlambat untuk informasi reminder tunggal.
+  const remindersByCustomer = new Map<string, any>();
+  // Ambil cicilan per kasbon untuk menghitung sisa utang (outstanding)
+  const kasbonIds = (kasbonAktif ?? []).map((k) => k.id);
+  const { data: cicilanPerKasbonData, error: cicilanPerKasbonError } =
+    kasbonIds.length === 0
+      ? { data: [], error: null }
+      : await supabase
+          .from("cicilan")
+          .select("kasbon_id, jumlah_bayar")
+          .in("kasbon_id", kasbonIds);
+
+  if (cicilanPerKasbonError) {
+    console.error(cicilanPerKasbonError);
+    return null;
+  }
+
+  const cicilanByKasbon = new Map<string, number>();
+  (cicilanPerKasbonData ?? []).forEach((c) => {
+    const prev = cicilanByKasbon.get(c.kasbon_id) ?? 0;
+    cicilanByKasbon.set(c.kasbon_id, prev + (c.jumlah_bayar ?? 0));
+  });
+
+  (kasbonAktif ?? [])
     .filter((k) => k.jatuh_tempo && k.jatuh_tempo <= today)
-    .map((k) => {
+    .forEach((k) => {
       const pel = k.pelanggan as {
+        id?: string;
         nama?: string;
         no_hp?: string;
         kategori?: string;
@@ -602,25 +668,53 @@ export async function fetchDashboardStats() {
       const overdue = Math.floor(
         (new Date().getTime() - new Date(k.jatuh_tempo).getTime()) / 86400000,
       );
-      return {
-        kasbonId: k.id,
-        name: pel?.nama ?? "?",
-        noHp: pel?.no_hp ?? "",
-        kategori: normalizeCategoryLabel(pel?.kategori),
-        jumlah: k.jumlah,
-        tanggalJanji: k.jatuh_tempo,
-        info: overdue === 0 ? "Jatuh tempo hari ini" : `${overdue} hari lewat`,
-        amount: new Intl.NumberFormat("id-ID", {
-          style: "currency",
-          currency: "IDR",
-          minimumFractionDigits: 0,
-        }).format(k.jumlah),
-        stateClass:
-          overdue === 0
-            ? "text-amber-600 dark:text-amber-300"
-            : "text-rose-600 dark:text-rose-300",
-      };
+      // hitung outstanding untuk kasbon ini: jumlah - total cicilan yang sudah dibayar
+      const paid = cicilanByKasbon.get(k.id) ?? 0;
+      const outstanding = Math.max((k.jumlah ?? 0) - paid, 0);
+      const key = pel?.id ?? pel?.nama ?? k.id;
+      const existing = remindersByCustomer.get(key);
+      if (!existing) {
+        remindersByCustomer.set(key, {
+          kasbonId: k.id,
+          name: pel?.nama ?? "?",
+          noHp: pel?.no_hp ?? "",
+          kategori: normalizeCategoryLabel(pel?.kategori),
+          totalJumlah: outstanding,
+          countKasbon: 1,
+          tanggalJanji: k.jatuh_tempo,
+          mostOverdue: overdue,
+        });
+      } else {
+        existing.totalJumlah += outstanding;
+        existing.countKasbon += 1;
+        if (overdue > existing.mostOverdue) {
+          existing.mostOverdue = overdue;
+          existing.tanggalJanji = k.jatuh_tempo;
+          existing.kasbonId = k.id;
+        }
+      }
     });
+
+  const reminders = Array.from(remindersByCustomer.values()).map((r) => {
+    const overdue = r.mostOverdue ?? 0;
+    return {
+      kasbonId: r.kasbonId,
+      name: r.name,
+      noHp: r.noHp,
+      kategori: r.kategori,
+      jumlah: r.totalJumlah,
+      countKasbon: r.countKasbon,
+      tanggalJanji: r.tanggalJanji,
+      info: overdue === 0 ? "Jatuh tempo hari ini" : `${overdue} hari lewat`,
+      amount: new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+      }).format(r.totalJumlah),
+      stateClass:
+        overdue === 0 ? "text-amber-600 dark:text-amber-300" : "text-rose-600 dark:text-rose-300",
+    };
+  });
 
   return {
     totalKasbon,

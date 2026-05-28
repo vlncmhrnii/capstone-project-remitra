@@ -65,7 +65,9 @@ export function computeCustomerSummary(
     janjiBayar,
     overdueDays: Math.max(overdueDays, 0),
     isJatuhTempo: Boolean(janjiBayar) && overdueDays > 0 && sisaUtang > 0,
-    kategori:
-      sisaUtang <= 0 ? "Green" : getCustomerCategory(customer.skor_keterlambatan ?? 0),
+    // Use category from DB when available (ensures consistency with server-side rules)
+    kategori: sisaUtang <= 0
+      ? "Green"
+      : (customer.kategori ? normalizeCategoryLabel(customer.kategori) : getCustomerCategory(customer.skor_keterlambatan ?? 0)),
   };
 }

@@ -192,7 +192,7 @@ export default function Dashboard() {
     {
       label: "Black",
       count: `${stats?.kategoriCount.Black ?? 0} orang`,
-      note: "Ada lebih dari satu utang telat lebih dari 30 hari (macet).",
+      note: "Ada utang telat lebih dari 30 hari (macet).",
       chipClass: "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900",
       cardClass: "border-orange-200 bg-white/90 dark:border-orange-900/60 dark:bg-neutral-900/70",
     },
@@ -276,6 +276,39 @@ export default function Dashboard() {
       window.clearInterval(refreshInterval);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [ready]);
+
+  // Supabase Realtime subscription: refresh stats when kasbon or cicilan berubah
+  useEffect(() => {
+    if (!ready) return;
+    const sb = createClient();
+
+    const handleChange = async () => {
+      const nextStats = await fetchDashboardStats();
+      if (nextStats) setStats(nextStats);
+    };
+
+    const channel = sb
+      .channel("realtime-dashboard")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "kasbon" },
+        handleChange,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cicilan" },
+        handleChange,
+      )
+      .subscribe();
+
+    return () => {
+      try {
+        sb.removeChannel(channel);
+      } catch (e) {
+        // ignore
+      }
     };
   }, [ready]);
 

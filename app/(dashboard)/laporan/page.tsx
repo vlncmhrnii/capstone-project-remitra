@@ -185,14 +185,14 @@ export default function LaporanPage() {
     {
       label: "Red",
       count: `${stats?.kategoriCount.Red ?? 0} orang`,
-      note: "Perlu follow up aktif agar piutang tidak menumpuk.",
+      note: "Ada utang telat 8–30 hari, segera ditagih.",
       chipClass: "bg-rose-500 text-white",
       cardClass: "border-orange-200 bg-white/90 dark:border-orange-900/60 dark:bg-neutral-900/70",
     },
     {
       label: "Black",
       count: `${stats?.kategoriCount.Black ?? 0} orang`,
-      note: "Masuk risiko tinggi dan butuh perhatian khusus.",
+      note: "Ada utang telat lebih dari 30 hari (macet).",
       chipClass: "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900",
       cardClass: "border-orange-200 bg-white/90 dark:border-orange-900/60 dark:bg-neutral-900/70",
     },
