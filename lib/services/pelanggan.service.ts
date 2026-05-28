@@ -695,7 +695,9 @@ export async function fetchDashboardStats() {
       }
     });
 
-  const reminders = Array.from(remindersByCustomer.values()).map((r) => {
+  const reminders = Array.from(remindersByCustomer.values())
+    .sort((a, b) => (b.mostOverdue ?? 0) - (a.mostOverdue ?? 0))
+    .map((r) => {
     const overdue = r.mostOverdue ?? 0;
     return {
       kasbonId: r.kasbonId,
